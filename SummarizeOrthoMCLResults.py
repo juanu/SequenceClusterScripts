@@ -51,7 +51,6 @@ def get_protein_info(genome_list, fasta_directory):
     This function goes into a folder with fasta files (.fasta) of the proteins and get the information for the proteins
     in each genome, including the ID and the length of the protein
     """
-
     from Bio import SeqIO
     proteins_in_genomes = defaultdict(list)
     protein_length = defaultdict(int)
@@ -166,9 +165,10 @@ def seqs_shared_clusters(cluster_dic, genome_dictionary):
     shared_single_clusters = []  # List with clusters that are shared and single copy
     shared_multiple_clusters = []  # List with clusters that are shared and in multiple copies
 
-    genomes_in_matrix = ["Cluster_ID"]
-    genomes_in_matrix.extend(sorted(genome_dictionary.values()))
-    all_clusters_matrix = [genomes_in_matrix]  # Matrix output
+    genomes_in_matrix = sorted(genome_dictionary.values())
+    header = ["Cluster_ID"]
+    header.extend(sorted(genome_dictionary.values()))
+    all_clusters_matrix = [header]
 
     for cluster in cluster_dic:
 
@@ -186,13 +186,14 @@ def seqs_shared_clusters(cluster_dic, genome_dictionary):
             else:
                 cluster_matrix.append(0)
 
+        #print cluster_matrix
         all_clusters_matrix.append(cluster_matrix)
 
         if len(count) == 1:
             unique_clusters[genome_list[0]].append(cluster)
 
         elif len(count) == len(genome_dictionary.keys()):
-            if sum(count.itervalues()) == 5:
+            if sum(count.itervalues()) == len(genome_dictionary.keys()):
                 shared_single_clusters.append(cluster)
             else:
                 shared_multiple_clusters.append(cluster)
@@ -374,8 +375,8 @@ if __name__ == '__main__':
         count_unique_clusters.write(genome + "\t" + str(len(unique_clusters[genome])) + "\n")
 
         for cluster in unique_clusters[genome]:
-            list_unique_clusters.write(genome + "\t" +
-                                       cluster + ",".join(protein for protein in cluster_information[cluster]) + "\n")
+            list_unique_clusters.write(genome + "\t" + cluster + "\t"
+                                       + ",".join(protein for protein in cluster_information[cluster]) + "\n")
 
     # Single copy shared clusters
 
@@ -436,4 +437,3 @@ if __name__ == '__main__':
         list_unique_clusters_group.close()
         list_all_group_combinations.close()
         run_summary.close()
-
