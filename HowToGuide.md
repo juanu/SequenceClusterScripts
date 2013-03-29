@@ -22,8 +22,10 @@ Another detail, is that the extension of each file does not need to be faa or fn
 ### Create a genome list file
 
 This will be used to replace the JGI names with appropiate (and more easy to remember) names. The format of this file is:
-Taxon OID (which is the prefix of each file) | Full genome name | Prefix to use
---- | --- | ---
+
+Taxon OID (which is the prefix of each file)  Full genome name  Prefix to use
+
+where each file is separated by tabs
 
 An example of this:
 645058727       Acidithiobacillus caldus ATCC 51756     Acaldus51756
