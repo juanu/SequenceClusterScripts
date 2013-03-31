@@ -431,7 +431,7 @@ if __name__ == '__main__':
 
             for cluster in combination_clusters[combination]:
                 list_all_group_combinations.write(combination_name + "\t"
-                                                  + cluster + "\t" + ",".join(cluster_information[cluster]))
+                                                  + cluster + "\t" + ",".join(cluster_information[cluster]) + "\n")
 
         count_group_results.close()
         list_unique_clusters_group.close()
