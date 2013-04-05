@@ -72,6 +72,9 @@ orthomclDumpPairsFiles __config_file__
 It is possible here to try with different inflation values (I)
 mcl mclInput --abc -I 1.5 -o 1.5-mclOutput
 
+9. Get group names for the MCL clusters
+10. orthomclMclToGroups __group_name__ __number__ < __mcl_output_file__ > __group_output_file__
+
 ###Analyze the orthoMCL output with the custom python scripts
 1. PrepareGenome_OrthoMCL.py
 2. AnnotateOrthoMCL_Clusters.py
