@@ -22,17 +22,10 @@ def create_sequence_dictionary(fasta_folder):
     return sequence_dictionary
 
 
-def create_sequence_alignment(input_sequence):
-    pass
-
-
-def create_FastTree(input_alignment):
-    pass
-
-
-if __name__=='__main__':
-    from cogent import LoadSeqs,DNA,PROTEIN
-    from cogent.app.muscle_v38 import align_unaligned_seqs as muscle_align_unaligned_seqs
+if __name__ == '__main__':
+    from cogent import LoadSeqs, DNA, PROTEIN
+    #from cogent.app.muscle_v38 import align_unaligned_seqs as muscle_align_unaligned_seqs
+    from cogent.app.mafft import align_unaligned_seqs as mafft_align_unaligned_seqs
     from cogent.core.genetic_code import DEFAULT as standard_code
     from cogent.app.fasttree import build_tree_from_alignment as build_tree_fasttree
     from AnnotateOrthoMCL_Clusters import get_cluster_information
@@ -75,6 +68,7 @@ if __name__=='__main__':
     frameshift_cases = []
     inframe_stops = []
     clusters_too_short = []
+    nucleotide_not_found = []
 
     for cluster in cluster_information:
 
@@ -84,7 +78,13 @@ if __name__=='__main__':
         for protein in protein_list:
             genome_id, protein_id = protein.split("|")
 
-            sequence_with_stop_codons = DNA.makeSequence(dna_sequence_dic[protein_id])
+            #Check if the sequence exists, if not store it and keep going
+
+            if not protein in dna_sequence_dic:
+                nucleotide_not_found.append(protein)
+                continue
+
+            sequence_with_stop_codons = DNA.makeSequence(dna_sequence_dic[protein])
 
             #Check if the sequence is the right one, and check for in frame stops
             #It seems that in JGI annotation, when scaffolds are joined, the resulted proteins do not match
@@ -106,7 +106,6 @@ if __name__=='__main__':
             else:
                 frameshift_cases.append([cluster, genome_id, protein_id])
 
-
         if len(curated_protein_list) < 3:  # Only take those clusters with 3 sequences or more
             clusters_too_short.append(cluster)
             continue
@@ -118,7 +117,7 @@ if __name__=='__main__':
         unaligned_AA = unaligned_DNA.getTranslation()
 
         #Generate alignments using muscle
-        aligned_AA = muscle_align_unaligned_seqs(unaligned_AA, PROTEIN)
+        aligned_AA = mafft_align_unaligned_seqs(unaligned_AA, PROTEIN)
 
         #Replace the aminoacid sequences with the nucleotide sequence
         aligned_DNA = aligned_AA.replaceSeqs(unaligned_DNA)
@@ -133,23 +132,25 @@ if __name__=='__main__':
 
         #Write the unaligned and aligned sequences
         unaligned_DNA.writeToFile(dna_unaligned_folder + "/" + cluster + ".fna", format="fasta")
-        unaligned_AA.writeToFile(protein_unaligned_folder + "/" + cluster + ".fna", format="fasta")
+        unaligned_AA.writeToFile(protein_unaligned_folder + "/" + cluster + ".faa", format="fasta")
         aligned_DNA.writeToFile(dna_aligned_folder + "/" + cluster + ".fna", format="fasta")
-        aligned_AA.writeToFile(protein_alignment_folder + "/" + cluster + ".fna", format="fasta")
+        aligned_AA.writeToFile(protein_alignment_folder + "/" + cluster + ".faa", format="fasta")
 
         tree_output.close()
 
     #Print log files
 
-    logfile = open (args.output_directory + "/logfile.txt", 'w')
-    file_frameshifts = open (args.output_directory + "/frameshifts.txt", 'w')
-    file_inframe_stops = open (args.output_directory + "/inframe_stops.txt", 'w')
-    file_short_clusters = open (args.output_directory + "/small_clusters.txt", 'w')
+    logfile = open(args.output_directory + "/logfile.txt", 'w')
+    file_frameshifts = open(args.output_directory + "/frameshifts.txt", 'w')
+    file_inframe_stops = open(args.output_directory + "/inframe_stops.txt", 'w')
+    file_short_clusters = open(args.output_directory + "/small_clusters.txt", 'w')
+    file_nuc_not_found = open(args.output_directory + "/nucleotide_not_found.txt", 'w')
 
     logfile.write("Total number of analyzed cluster: %d\n" % len(cluster_information))
     logfile.write("Clusters with less than 3 sequences (after cleaning): %d\n" % len(clusters_too_short))
     logfile.write("Total sequences with frameshifts: %d\n" % len(frameshift_cases))
     logfile.write("Sequences with inframe stops: %d\n" % len(inframe_stops))
+    logfile.write("Proteins not found in the nucleotide sequences: %d\n" % len(nucleotide_not_found))
 
     for item in frameshift_cases:
         file_frameshifts.write("\t".join(item) + "\n")
@@ -157,9 +158,11 @@ if __name__=='__main__':
     for item in inframe_stops:
         file_inframe_stops.write("\t".join(item) + "\n")
 
-    file_short_clusters.write("\t".join(clusters_too_short) + "\n")
+    file_short_clusters.write("\n".join(clusters_too_short))
+
+    file_nuc_not_found.write("\n".join(nucleotide_not_found))
 
     logfile.close()
     file_frameshifts.close()
     file_inframe_stops.close()
-    file_short_clusters.close()
+    file_nuc_not_found.close()
